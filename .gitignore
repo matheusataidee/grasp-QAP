@@ -1,0 +1,3 @@
+# Ignore files with extension `.exe` & `.sm`
+*.exe
+.vscode/
