@@ -47,6 +47,44 @@ void Solution::constructionPhase() {
     }
 }
 
+void Solution::localSearch() {
+    bool change = true;
+    while (change) {
+        change = false;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (i == j) continue;
+                int il = mapping[i];
+                int jl = mapping[j];
+                ll edge = L[i][j] * D[il][jl] + L[j][i] * D[jl][il];
+                ll remove_gain = cur_weights[i][il] + cur_weights[j][jl] - edge;
+                ll add_cost = cur_weights[i][jl] + cur_weights[j][il] + edge;
+                if (remove_gain > add_cost) {
+                    change = true;
+                    score += add_cost - remove_gain;
+                    mapping[i] = jl;
+                    mapping[j] = il;
+                    reverse_mapping[il] = j;
+                    reverse_mapping[jl] = i;
+                    for (int k = 0; k < n; k++) {
+                        for (int l = 0; l < n; l++) {
+                            cur_weights[k][l] -= L[k][i] * D[l][il] + L[i][k] * D[il][l];
+                            cur_weights[k][l] += L[k][i] * D[l][jl] + L[i][k] * D[jl][l];
+
+                            cur_weights[k][l] -= L[k][j] * D[l][jl] + L[j][k] * D[jl][l];
+                            cur_weights[k][l] += L[k][j] * D[l][il] + L[j][k] * D[il][l];
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+double Solution::getCurWeight(int a, int b) {
+    return cur_weights[a][b];
+}
+
 int Solution::getMapping(int p) {
     return mapping[p];
 }

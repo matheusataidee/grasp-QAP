@@ -1,6 +1,7 @@
 #ifndef _SOLUTION_H_
 #define _SOLUTION_H_
 
+#include <iostream>
 #include <algorithm>
 #include <vector>
 
@@ -25,7 +26,11 @@ class Solution {
 
         void constructionPhase();
 
+        void localSearch();
+
         int getMapping(int p);
+
+        double getCurWeight(int a, int b);
 
         double getScore();
 };
