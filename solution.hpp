@@ -26,7 +26,9 @@ class Solution {
 
         void constructionPhase();
 
-        void localSearch();
+        void permute(int i, int j);
+
+        void localSearch(bool best_improvement);
 
         int getMapping(int p);
 

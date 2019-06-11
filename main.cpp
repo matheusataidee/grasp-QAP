@@ -12,15 +12,16 @@ typedef long long ll;
 
 int n;
 double alpha;
+bool best_improvement;
 vector<vector<ll> > L;
 vector<vector<ll> > D;
 
 void showUsage(string name) {
-    cout << "Usage: " << name << " --instance INSTANCE --alpha ALPHA" << endl;
+    cout << "Usage: " << name << " --instance <INSTANCE> --alpha <ALPHA> --best_improvement <bool>" << endl;
 }
 
 int main(int argc, char** argv) {
-    if (argc < 5) {
+    if (argc < 7) {
         showUsage(argv[0]);
         return -1;
     }
@@ -29,8 +30,11 @@ int main(int argc, char** argv) {
         if (strcmp(argv[i], "--instance") == 0) {
             fin.open(argv[++i]);
         }
-        if (strcmp(argv[i], "--alpha") ==0) {
+        if (strcmp(argv[i], "--alpha") == 0) {
             alpha = atof(argv[++i]);
+        }
+        if (strcmp(argv[i], "--best_improvement") == 0) {
+            best_improvement = atoi(argv[++i]) == 1;
         }
     }
     fin >> n;
@@ -39,11 +43,13 @@ int main(int argc, char** argv) {
     for (int i = 0; i < n; i++) for (int j = 0; j < n; j++) fin >> L[i][j];
     for (int i = 0; i < n; i++) for (int j = 0; j < n; j++) fin >> D[i][j];
     double best_score = 99999999;
-    for (int j = 0; j < 500; j++) {
-        cout << "Iteration: " << j << endl;
+    double best_score_constr = 99999999;
+    for (int j = 0; j < 1000; j++) {
+        //cout << "Iteration: " << j << endl;
         Solution sol(n, alpha);
         sol.constructionPhase();    
-        sol.localSearch();
+        best_score_constr = min(best_score_constr, sol.getScore());
+        sol.localSearch(best_improvement);
         best_score = min(best_score, sol.getScore());
 
         double validation = 0;
@@ -63,7 +69,8 @@ int main(int argc, char** argv) {
             cout << "Error!" << endl;
         }
     }
-    cout << "Best Score = " << best_score << endl;
+    cout  << fixed << best_score_constr << "\t";
+    cout  << fixed <<  best_score << endl;
     /*int opt[12] = {8 , 1, 6, 2, 11, 10, 3, 5, 9, 7, 12, 4};
     double partial = 0.0;
     for (int i = 0; i < n; i++) {

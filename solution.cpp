@@ -7,7 +7,7 @@ Solution::Solution(int _n, double _alpha) {
     cur_weights = vector<vector<double> > (n, vector<double>(n, 0));
     mapping = vector<int>(n, -1);
     reverse_mapping = vector<int>(n, -1);
-    for (int i = 0; i < n; i++) {;
+    for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
             v.push_back(make_pair(0.0,  make_pair(i, j)));
         }
@@ -47,9 +47,35 @@ void Solution::constructionPhase() {
     }
 }
 
-void Solution::localSearch() {
+void Solution::permute(int i, int j) {
+    int il = mapping[i];
+    int jl = mapping[j];
+    ll edge = L[i][j] * D[il][jl] + L[j][i] * D[jl][il];
+    ll remove_gain = cur_weights[i][il] + cur_weights[j][jl] - edge;
+    ll add_cost = cur_weights[i][jl] + cur_weights[j][il] + edge;
+    if (remove_gain > add_cost) {
+        score += add_cost - remove_gain;
+        mapping[i] = jl;
+        mapping[j] = il;
+        reverse_mapping[il] = j;
+        reverse_mapping[jl] = i;
+        for (int k = 0; k < n; k++) {
+            for (int l = 0; l < n; l++) {
+                cur_weights[k][l] -= L[k][i] * D[l][il] + L[i][k] * D[il][l];
+                cur_weights[k][l] += L[k][i] * D[l][jl] + L[i][k] * D[jl][l];
+
+                cur_weights[k][l] -= L[k][j] * D[l][jl] + L[j][k] * D[jl][l];
+                cur_weights[k][l] += L[k][j] * D[l][il] + L[j][k] * D[il][l];
+            }
+        }
+    }
+}
+
+void Solution::localSearch(bool best_improvement) {
     bool change = true;
     while (change) {
+        double best_permute = 99999999;
+        int a, b;
         change = false;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
@@ -61,22 +87,20 @@ void Solution::localSearch() {
                 ll add_cost = cur_weights[i][jl] + cur_weights[j][il] + edge;
                 if (remove_gain > add_cost) {
                     change = true;
-                    score += add_cost - remove_gain;
-                    mapping[i] = jl;
-                    mapping[j] = il;
-                    reverse_mapping[il] = j;
-                    reverse_mapping[jl] = i;
-                    for (int k = 0; k < n; k++) {
-                        for (int l = 0; l < n; l++) {
-                            cur_weights[k][l] -= L[k][i] * D[l][il] + L[i][k] * D[il][l];
-                            cur_weights[k][l] += L[k][i] * D[l][jl] + L[i][k] * D[jl][l];
-
-                            cur_weights[k][l] -= L[k][j] * D[l][jl] + L[j][k] * D[jl][l];
-                            cur_weights[k][l] += L[k][j] * D[l][il] + L[j][k] * D[il][l];
+                    if (!best_improvement) {
+                        permute(i, j);
+                    } else {
+                        if (best_permute > add_cost - remove_gain) {
+                            a = i;
+                            b = j;
+                            best_permute = add_cost - remove_gain;
                         }
                     }
                 }
             }
+        }
+        if (best_improvement && change) {
+            permute(a, b);
         }
     }
 }
