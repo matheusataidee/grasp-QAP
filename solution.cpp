@@ -53,7 +53,7 @@ void Solution::permute(int i, int j) {
     ll edge = L[i][j] * D[il][jl] + L[j][i] * D[jl][il];
     ll remove_gain = cur_weights[i][il] + cur_weights[j][jl] - edge;
     ll add_cost = cur_weights[i][jl] + cur_weights[j][il] + edge;
-    if (remove_gain > add_cost) {
+
         score += add_cost - remove_gain;
         mapping[i] = jl;
         mapping[j] = il;
@@ -68,7 +68,6 @@ void Solution::permute(int i, int j) {
                 cur_weights[k][l] += L[k][j] * D[l][il] + L[j][k] * D[il][l];
             }
         }
-    }
 }
 
 void Solution::localSearch(bool best_improvement) {

@@ -3,6 +3,9 @@
 #include <string>
 #include <string.h>
 #include <vector>
+#include <ctime>
+#include <ratio>
+#include <chrono>
 
 #include "solution.hpp"
 
@@ -13,15 +16,53 @@ typedef long long ll;
 int n;
 double alpha;
 bool best_improvement;
+bool use_elite;
 vector<vector<ll> > L;
 vector<vector<ll> > D;
 
+double worst_on_pool_cost = -99999999;
+double best_on_pool_cost = 99999999;
+vector<Solution> pool;
+
+void doElite(Solution sol) {
+    for (int i = 0; i < pool.size(); i++) {
+        Solution p = sol;
+        for (int j = 0; j < n; j++) {
+            if (p.getMapping(j) == pool[i].getMapping(j)) continue;
+            for (int k = j + 1; k < n; k++) {
+                if (p.getMapping(k) == pool[i].getMapping(j)) {
+                    p.permute(j, k);
+                    break;
+                }
+            }
+            Solution pp = p;
+            pp.localSearch(best_improvement);
+            best_on_pool_cost = min(best_on_pool_cost, pp.getScore());
+        }
+    }
+    if (pool.size() < 10) {
+        worst_on_pool_cost = max(worst_on_pool_cost, sol.getScore());
+        pool.push_back(sol);
+    } else {
+        for (int i = 0; i < pool.size(); i++) {
+            if (pool[i].getScore() == worst_on_pool_cost) {
+                pool[i] = sol;
+                break;
+            }
+        }
+        worst_on_pool_cost = -999999999;
+        for (int i = 0; i < pool.size(); i++) {
+            worst_on_pool_cost = max(worst_on_pool_cost, pool[i].getScore());
+        }
+    }
+}
+
 void showUsage(string name) {
-    cout << "Usage: " << name << " --instance <INSTANCE> --alpha <ALPHA> --best_improvement <bool>" << endl;
+    cout << "Usage: " << name << " --instance <INSTANCE> --alpha <ALPHA> --best_improvement <bool> --elite <bool>" << endl;
 }
 
 int main(int argc, char** argv) {
-    if (argc < 7) {
+    if (argc < 9) {
         showUsage(argv[0]);
         return -1;
     }
@@ -36,6 +77,9 @@ int main(int argc, char** argv) {
         if (strcmp(argv[i], "--best_improvement") == 0) {
             best_improvement = atoi(argv[++i]) == 1;
         }
+        if (strcmp(argv[i], "--elite") == 0) {
+            use_elite = atoi(argv[++i]) == 1;
+        }
     }
     fin >> n;
     L = vector<vector<ll> >(n, vector<ll>(n));
@@ -44,14 +88,20 @@ int main(int argc, char** argv) {
     for (int i = 0; i < n; i++) for (int j = 0; j < n; j++) fin >> D[i][j];
     double best_score = 99999999;
     double best_score_constr = 99999999;
-    for (int j = 0; j < 1000; j++) {
-        //cout << "Iteration: " << j << endl;
+    Solution best_on_pool(n, alpha);
+
+    chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
+    for (int j = 0; j < 100; j++) {
+        cout << "Iteration: " << j << endl;
         Solution sol(n, alpha);
         sol.constructionPhase();    
         best_score_constr = min(best_score_constr, sol.getScore());
         sol.localSearch(best_improvement);
         best_score = min(best_score, sol.getScore());
 
+        if (use_elite) {
+            doElite(sol);
+        }
         double validation = 0;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
@@ -68,9 +118,16 @@ int main(int argc, char** argv) {
         if (((ll)sol.getScore() != (ll)validation) || ((ll)sol.getScore() != val_cur_w / 2)) {
             cout << "Error!" << endl;
         }
+
+        chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
+
+        chrono::duration<double> time_span = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
+
+        if (time_span.count() > 1800) break;
     }
     cout  << fixed << best_score_constr << "\t";
-    cout  << fixed <<  best_score << endl;
+    cout  << fixed <<  best_score << "\t";
+    cout  << fixed << best_on_pool_cost << endl;
     /*int opt[12] = {8 , 1, 6, 2, 11, 10, 3, 5, 9, 7, 12, 4};
     double partial = 0.0;
     for (int i = 0; i < n; i++) {
