@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
     Solution best_on_pool(n, alpha);
 
     chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
-    for (int j = 0; j < 100; j++) {
+    for (int j = 0; j < 1000; j++) {
         cout << "Iteration: " << j << endl;
         Solution sol(n, alpha);
         sol.constructionPhase();    
